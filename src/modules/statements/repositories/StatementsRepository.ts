@@ -2,6 +2,7 @@ import { getRepository, Repository } from "typeorm";
 
 import { Statement } from "../entities/Statement";
 import { ICreateStatementDTO } from "../useCases/createStatement/ICreateStatementDTO";
+import ICreateTransferDTO from "../useCases/createTransfer/ICreateTransferDTO";
 import { IGetBalanceDTO } from "../useCases/getBalance/IGetBalanceDTO";
 import { IGetStatementOperationDTO } from "../useCases/getStatementOperation/IGetStatementOperationDTO";
 import { IStatementsRepository } from "./IStatementsRepository";
@@ -29,6 +30,18 @@ export class StatementsRepository implements IStatementsRepository {
     return this.repository.save(statement);
   }
 
+  async createTransfer({ user_id, amount, description, sender_id, type }: ICreateTransferDTO): Promise<Statement> {
+    const transfer = this.repository.create({
+      user_id,
+      sender_id,
+      amount,
+      description,
+      type
+    });
+
+    return this.repository.save(transfer);
+  };
+
   async findStatementOperation({ statement_id, user_id }: IGetStatementOperationDTO): Promise<Statement | undefined> {
     return this.repository.findOne(statement_id, {
       where: { user_id }
@@ -38,17 +51,19 @@ export class StatementsRepository implements IStatementsRepository {
   async getUserBalance({ user_id, with_statement = false }: IGetBalanceDTO):
     Promise<
       { balance: number } | { balance: number, statement: Statement[] }
-    >
-  {
+    > {
     const statement = await this.repository.find({
-      where: { user_id }
+      where: [
+        { user_id },
+        { sender_id: user_id }
+      ]
     });
 
     const balance = statement.reduce((acc, operation) => {
-      if (operation.type === 'deposit') {
-        return acc + operation.amount;
+      if (operation.type === 'deposit' || (operation.type === 'transfer' && operation.user_id === user_id)) {
+        return Number(acc) + Number(operation.amount);
       } else {
-        return acc - operation.amount;
+        return Number(acc) - Number(operation.amount);
       }
     }, 0)
 
