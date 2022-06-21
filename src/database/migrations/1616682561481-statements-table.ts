@@ -14,6 +14,7 @@ export class accountsTable1616682561481 implements MigrationInterface {
         {
           name: 'user_id',
           type: 'uuid',
+          isNullable: true
         },
         {
           name: 'sender_id',
@@ -53,7 +54,7 @@ export class accountsTable1616682561481 implements MigrationInterface {
           referencedTableName: 'users',
           referencedColumnNames: ['id'],
           onUpdate: 'CASCADE',
-          onDelete: 'CASCADE'
+          onDelete: 'SET NULL'
         },
         {
           name: 'FKSenderIdStatement',
@@ -61,7 +62,7 @@ export class accountsTable1616682561481 implements MigrationInterface {
           referencedTableName: 'users',
           referencedColumnNames: ['id'],
           onUpdate: 'CASCADE',
-          onDelete: 'CASCADE'
+          onDelete: 'SET NULL'
         }
       ]
     }))
